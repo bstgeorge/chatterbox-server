@@ -18,23 +18,41 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept, authorization',
   'access-control-max-age': 10 // Seconds.
 };
-
+const messageData = [];
+//keys of request are: url,  method,  _postData,  setEncoding,  on,  addListener
 var requestHandler = function (request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  if (request.url === '/taco') {
-    var statusCode = 200;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'text/plain';
-    response.writeHead(statusCode, headers);
-    response.end('tacos');
-  }
+  var headers = defaultCorsHeaders;
+  headers['Content-Type'] = 'application/json';
+
   if (request.url === '/classes/messages') {
-    var statusCode = 200;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'text/plain';
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify('messages'));
+
+    if (request.method === 'OPTIONS') {
+      let statusCode = 200;
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(responseObj));
+
+    } else if (request.method === 'GET') {
+      let statusCode = 200;
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(responseObj.results));
+
+    } else if (request.method === 'POST') {
+      let statusCode = 201;
+      let chunk = '';
+      request.on('data', (data) => {
+        chunk += data;
+        messageData.push(JSON.parse(chunk));
+      });
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(messageData));
+    }
+
+  } else {
+    response.writeHead(404, headers);
+    response.end();
   }
+
 };
 
 module.exports.requestHandler = requestHandler;
